@@ -1,0 +1,106 @@
+import cv2
+from matplotlib import pyplot as plt
+import numpy as np
+import pytesseract
+
+# Define the path to the Tesseract executable
+pytesseract.pytesseract.tesseract_cmd = r'C:/Program Files/Tesseract-OCR/tesseract.exe'  # Tesseract path
+
+def display(im_path):
+    dpi = 80
+    im_data = plt.imread(im_path)
+    height, width = im_data.shape[:2]
+    figsize = width / float(dpi), height / float(dpi)
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.axis('off')
+    ax.imshow(im_data, cmap='gray')
+    plt.show()
+
+def bw_img(image):
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    thresh, img_bw = cv2.threshold(gray_image, 70, 150, cv2.THRESH_BINARY)
+    return img_bw
+
+def noise_removal(image):
+    kernel = np.ones((1, 1), np.uint8)
+    image = cv2.dilate(image, kernel, iterations=1)
+    image = cv2.erode(image, kernel, iterations=1)
+    image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+    image = cv2.medianBlur(image, 3)
+    return image
+
+def thin_font(image):
+    image = cv2.bitwise_not(image)
+    kernel = np.ones((2, 2), np.uint8)
+    image = cv2.erode(image, kernel, iterations=1)
+    image = cv2.bitwise_not(image)
+    return image
+
+def remove_borders(image):
+    contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cntsSorted = sorted(contours, key=lambda x: cv2.contourArea(x))
+    cnt = cntsSorted[-1]
+    x, y, w, h = cv2.boundingRect(cnt)
+    crop = image[y:y + h, x:x + w]
+    return crop
+
+def getSkewAngle(cvImage) -> float:
+    newImage = cvImage.copy()
+    gray = cv2.cvtColor(newImage, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (9, 9), 0)
+    thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (30, 5))
+    dilate = cv2.dilate(thresh, kernel, iterations=2)
+    contours, _ = cv2.findContours(dilate, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    largestContour = contours[0]
+    minAreaRect = cv2.minAreaRect(largestContour)
+    angle = minAreaRect[-1]
+    if angle < -45:
+        angle = 90 + angle
+    if angle > 45:
+        angle = angle - 90
+    return angle
+
+def rotateImage(cvImage, angle: float):
+    newImage = cvImage.copy()
+    (h, w) = newImage.shape[:2]
+    center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    newImage = cv2.warpAffine(newImage, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    return newImage
+
+def deskew(cvImage):
+    angle = getSkewAngle(cvImage)
+    return rotateImage(cvImage, -1.0 * angle)
+
+def preprocess(image):
+    rotated = deskew(image)
+    img_bw = bw_img(rotated)
+    no_noise = noise_removal(img_bw)
+    no_borders = remove_borders(no_noise)
+    thinFont_image = thin_font(no_borders)
+    return thinFont_image
+
+def perform_ocr(image):
+    # Preprocess the image
+    processed_image = preprocess(image)
+
+    # Perform OCR using Tesseract
+    custom_config = r'--oem 3 --psm 6 -l tha+eng'  # Specify OCR Engine Mode (OEM) and Page Segmentation Mode (PSM)
+    text = pytesseract.image_to_string(processed_image, config=custom_config)
+    return text
+
+
+
+if __name__ == '__main__':
+    image_file = "C:/Users/User/OneDrive/Desktop/testOCR/thai_id1.jpg"
+    img = cv2.imread(image_file)
+    extracted_text = perform_ocr(img)
+    print("Extracted Text:")
+    print(extracted_text)
+
+    #preprocess_img = preprocess(img)
+    #cv2.imwrite("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id1.jpg", preprocess_img)
+    #display("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id1.jpg")
