@@ -17,10 +17,17 @@ def display(im_path):
     ax.imshow(im_data, cmap='gray')
     plt.show()
 
-def bw_img(image):
+def bw_img1(image):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    thresh, img_bw = cv2.threshold(gray_image, 70, 150, cv2.THRESH_BINARY)
+    thresh, img_bw = cv2.threshold(gray_image, 70, 130, cv2.THRESH_BINARY)
     return img_bw
+
+def bw_img2(image):
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Use Otsu's method to determine the best threshold value
+    _, img_bw = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return img_bw
+
 
 def noise_removal(image):
     kernel = np.ones((1, 1), np.uint8)
@@ -77,7 +84,7 @@ def deskew(cvImage):
 
 def preprocess(image):
     rotated = deskew(image)
-    img_bw = bw_img(rotated)
+    img_bw = bw_img2(rotated)
     no_noise = noise_removal(img_bw)
     no_borders = remove_borders(no_noise)
     thinFont_image = thin_font(no_borders)
@@ -92,15 +99,112 @@ def perform_ocr(image):
     text = pytesseract.image_to_string(processed_image, config=custom_config)
     return text
 
+def ocr_id(image):
+    processed_image = preprocess(image)
+    roi_ratios = (0.445, 0.105, 0.35, 0.1)  # Adjust these values as needed
 
+    height, width = processed_image.shape
+    x_ratio, y_ratio, w_ratio, h_ratio = roi_ratios
+    x = int(x_ratio * width)
+    y = int(y_ratio * height)
+    w = int(w_ratio * width)
+    h = int(h_ratio * height)
+
+    # Debugging output
+    #print(f"Image dimensions: {width}x{height}")
+    #print(f"Calculated ROI: x={x}, y={y}, w={w}, h={h}")
+
+    if x < 0 or y < 0 or x + w > width or y + h > height:
+        raise ValueError("ROI coordinates are outside the image boundaries.")
+
+    roi = processed_image[y:y+h, x:x+w]
+
+    # Display the ROI
+    #cv2.imshow("ID ROI", roi)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+
+    custom_config = r'--oem 3 --psm 6 -l tha+eng'
+    text = pytesseract.image_to_string(roi, config=custom_config)
+    return text
+
+def ocr_firstname(image):
+    processed_image = preprocess(image)
+    roi_ratios = (0.4, 0.31, 0.5, 0.07)  # Adjust these values as needed
+
+    height, width = processed_image.shape
+    x_ratio, y_ratio, w_ratio, h_ratio = roi_ratios
+    x = int(x_ratio * width)
+    y = int(y_ratio * height)
+    w = int(w_ratio * width)
+    h = int(h_ratio * height)
+
+    # Debugging output
+    #print(f"Image dimensions: {width}x{height}")
+    #print(f"Calculated ROI: x={x}, y={y}, w={w}, h={h}")
+
+    if x < 0 or y < 0 or x + w > width or y + h > height:
+        raise ValueError("ROI coordinates are outside the image boundaries.")
+
+    roi = processed_image[y:y+h, x:x+w]
+
+    # Display the ROI
+    #cv2.imshow("First Name ROI", roi)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+
+    custom_config = r'--oem 3 --psm 6 -l tha+eng'
+    text = pytesseract.image_to_string(roi, config=custom_config)
+    return text
+
+def ocr_lastname(image):
+    processed_image = preprocess(image)
+    roi_ratios = (0.46, 0.37, 0.4, 0.08)  # Adjust these values as needed
+
+    height, width = processed_image.shape
+    x_ratio, y_ratio, w_ratio, h_ratio = roi_ratios
+    x = int(x_ratio * width)
+    y = int(y_ratio * height)
+    w = int(w_ratio * width)
+    h = int(h_ratio * height)
+
+    # Debugging output
+    #print(f"Image dimensions: {width}x{height}")
+    #print(f"Calculated ROI: x={x}, y={y}, w={w}, h={h}")
+
+    if x < 0 or y < 0 or x + w > width or y + h > height:
+        raise ValueError("ROI coordinates are outside the image boundaries.")
+
+    roi = processed_image[y:y+h, x:x+w]
+
+    # Display the ROI
+    cv2.imshow("Last Name ROI", roi)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    custom_config = r'--oem 3 --psm 6 -l tha+eng'
+    text = pytesseract.image_to_string(roi, config=custom_config)
+    return text
 
 if __name__ == '__main__':
-    image_file = "C:/Users/User/OneDrive/Desktop/testOCR/thai_id1.jpg"
+    image_file = "C:/Users/User/OneDrive/Desktop/testOCR/thai_id2.1.jpg"
     img = cv2.imread(image_file)
-    extracted_text = perform_ocr(img)
-    print("Extracted Text:")
-    print(extracted_text)
 
-    #preprocess_img = preprocess(img)
-    #cv2.imwrite("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id1.jpg", preprocess_img)
-    #display("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id1.jpg")
+    #test ppc img
+    #ppc_img = preprocess(img)
+    #cv2.imwrite("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id2.jpg", ppc_img)
+    #display("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id2.jpg")
+
+    id_text = ocr_id(img)
+    print(f"ID: {id_text}")
+
+
+    firstname_text = ocr_firstname(img)
+    print(firstname_text)
+
+    lastname_text = ocr_lastname(img)
+    print(lastname_text)
+
+    #extracted_text = perform_ocr(img)
+    #print("Extracted Text:")
+    #print(extracted_text)
