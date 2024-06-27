@@ -101,7 +101,7 @@ def perform_ocr(image):
 
 def extract_image(image):
     # Define ROI ratios for the picture region (adjust these values as needed)
-    roi_ratios = (0.74, 0.46, 0.25, 0.45)  # These values are examples; adjust based on your image layout
+    roi_ratios = (0.63, 0.46, 0.16, 0.25)  # These values are examples; adjust based on your image layout
 
     height, width = image.shape[:2]
     x_ratio, y_ratio, w_ratio, h_ratio = roi_ratios
@@ -125,7 +125,7 @@ def extract_image(image):
 
 def ocr_id(image):
     processed_image = preprocess(image)
-    roi_ratios = (0.445, 0.105, 0.35, 0.1)  # Adjust these values as needed
+    roi_ratios = (0.46, 0.27, 0.25, 0.05)  # Adjust these values as needed
 
     height, width = processed_image.shape
     x_ratio, y_ratio, w_ratio, h_ratio = roi_ratios
@@ -144,17 +144,17 @@ def ocr_id(image):
     roi = processed_image[y:y+h, x:x+w]
 
     # Display the ROI
-    #cv2.imshow("ID ROI", roi)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.imshow("ID ROI", roi)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    custom_config = r'--oem 3 --psm 6 -l tha+eng'
+    custom_config = r'--oem 3 --psm 6 -l eng -c tessedit_char_whitelist=0123456789'
     text = pytesseract.image_to_string(roi, config=custom_config)
     return text
 
 def ocr_firstname(image):
     processed_image = preprocess(image)
-    roi_ratios = (0.4, 0.31, 0.5, 0.07)  # Adjust these values as needed
+    roi_ratios = (0.45, 0.375, 0.25, 0.05)  # Adjust these values as needed
 
     height, width = processed_image.shape
     x_ratio, y_ratio, w_ratio, h_ratio = roi_ratios
@@ -173,17 +173,17 @@ def ocr_firstname(image):
     roi = processed_image[y:y+h, x:x+w]
 
     # Display the ROI
-    #cv2.imshow("First Name ROI", roi)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.imshow("First Name ROI", roi)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    custom_config = r'--oem 3 --psm 6 -l tha+eng'
+    custom_config = r'--oem 3 --psm 6 -l eng -c tessedit_char_whitelist=.AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz.'
     text = pytesseract.image_to_string(roi, config=custom_config)
     return text
 
 def ocr_lastname(image):
     processed_image = preprocess(image)
-    roi_ratios = (0.46, 0.37, 0.4, 0.08)  # Adjust these values as needed
+    roi_ratios = (0.46, 0.42, 0.3, 0.04)  # Adjust these values as needed
 
     height, width = processed_image.shape
     x_ratio, y_ratio, w_ratio, h_ratio = roi_ratios
@@ -202,22 +202,23 @@ def ocr_lastname(image):
     roi = processed_image[y:y+h, x:x+w]
 
     # Display the ROI
-    #cv2.imshow("Last Name ROI", roi)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.imshow("Last Name ROI", roi)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    custom_config = r'--oem 3 --psm 6 -l tha+eng'
+    custom_config = r'--oem 3 --psm 6 -l eng -c tessedit_char_whitelist=AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz'
+
     text = pytesseract.image_to_string(roi, config=custom_config)
     return text
 
 if __name__ == '__main__':
-    image_file = "C:/Users/User/OneDrive/Desktop/testOCR/thai_id1.jpg"
+    image_file = "C:/Users/User/OneDrive/Desktop/testOCR/test1.jpg"
     img = cv2.imread(image_file)
 
     #test ppc img
     #ppc_img = preprocess(img)
-    #cv2.imwrite("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id2.jpg", ppc_img)
-    #display("C:/Users/User/OneDrive/Desktop/testOCR/ppc_thai_id2.jpg")
+    #cv2.imwrite("C:/Users/User/OneDrive/Desktop/testOCR/ppc_test.jpg", ppc_img)
+    #display("C:/Users/User/OneDrive/Desktop/testOCR/ppc_test.jpg")
 
     #show picture
     person_picture = extract_image(img)
