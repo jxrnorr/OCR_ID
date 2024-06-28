@@ -177,7 +177,7 @@ def ocr_firstname(image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    custom_config = r'--oem 3 --psm 6 -l eng -c tessedit_char_whitelist=.AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz.'
+    custom_config = r'--oem 3 --psm 6 -l eng -c tessedit_char_whitelist=.AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz'
     text = pytesseract.image_to_string(roi, config=custom_config)
     return text
 
@@ -235,7 +235,3 @@ if __name__ == '__main__':
     #Show Lastname
     lastname_text = ocr_lastname(img)
     print(lastname_text)
-
-    #extracted_text = perform_ocr(img)
-    #print("Extracted Text:")
-    #print(extracted_text)
